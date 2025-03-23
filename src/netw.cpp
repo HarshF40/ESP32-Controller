@@ -1,4 +1,5 @@
 #include "../include/netw.hpp"
+#include <unistd.h>
 
 //UDP "CLIENT" for web server
 int crSocket(){
@@ -17,8 +18,14 @@ void sendData(int sock, const char* serverIP, int serverPort, std::string data="
   server.sin_family = AF_INET;
   server.sin_port = htons(serverPort);
   server.sin_addr.s_addr = inet_addr(serverIP);
-  int sentBytes = sendto(sock, data.c_str(), data.size(), 0, (sockaddr*)&server, sizeof(server));
-  if(sentBytes < 0) std::cerr<<"Failed to send data!"<<std::endl;
+
+  write(sock, data.c_str(), data.size());
+
+  //int sentBytes = sendto(sock, data.c_str(), data.size(), 0, (sockaddr*)&server, sizeof(server));
+  //if(sentBytes < 0) std::cerr<<"Failed to send data!"<<std::endl;
+  //else std::cout<<"Data Sent Successfully!"<<std::endl; //
+  
+
   close(sock);
 }
 
