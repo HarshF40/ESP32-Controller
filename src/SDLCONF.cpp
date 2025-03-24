@@ -2,6 +2,7 @@
 #include "../include/netw.hpp"
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 SDL_GameController *controller = nullptr;
 
@@ -36,16 +37,19 @@ int input(){
         return 0;
       }else if(event.type == SDL_CONTROLLERBUTTONDOWN){
         std::cout<<"Button Pressed: "<<(int)event.cbutton.button<<std::endl;
-        sendData(sock, "127.0.0.1", 8080, std::to_string(event.cbutton.button));
+        std::string button_data = "Button Pressed: " + std::to_string(event.cbutton.button) + "\n"; 
+        sendData(sock, "127.0.0.1", 8080, button_data);
       }else if(event.type == SDL_CONTROLLERAXISMOTION){
         std::cout<<"Axis: "<<static_cast<int>(event.caxis.axis)<<" Value: "<<event.caxis.value<<std::endl;
-        sendData(sock, "127.0.0.1", 8080, std::to_string(event.caxis.axis));
+        std::string axis_data = "Button: " +  std::to_string(event.caxis.axis) + " Axis Value: " + std::to_string(event.caxis.value) + "\n";
+        sendData(sock, "127.0.0.1", 8080, axis_data);
       }else if(event.type == SDL_CONTROLLERDEVICEREMOVED){
         std::cout<<"Controller Disconnected!"<<std::endl;
         return 0;
       }
     }
   }
+  close(sock);
 }
 
 void clean(){
