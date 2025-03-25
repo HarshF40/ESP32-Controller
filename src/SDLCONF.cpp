@@ -10,6 +10,7 @@
 #include <chrono>
 
 #define ESP32IP "127.0.0.1"
+#define WRAPPER 256
 
 std::mutex event_mutex;
 SDL_Event event;
@@ -42,7 +43,7 @@ void get_left_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
   int button = (int)(event.caxis.axis);
-  int value = (int)(event.caxis.value) <= 0 ? 0 : (int)(event.caxis.value);
+  int value = (int)(event.caxis.value)%WRAPPER;
   lock.unlock();
   if(button == 4) {
     left_trigger_axis = value;
@@ -54,7 +55,7 @@ void get_right_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
   int button = std::abs((int)(event.caxis.axis));
-  int value = (int)(event.caxis.value) <= 0 ? 0 : (int)(event.caxis.value);
+  int value = (((int)(event.caxis.value)+ 32768)/2)%WRAPPER;
   lock.unlock();
   if(button == 5) {
     right_trigger_axis = value;
@@ -70,7 +71,7 @@ int input(){
   std::thread left(get_left_trigger_val);
 
   while(true){
-        sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+    sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
       if(event.type == SDL_CONTROLLERAXISMOTION){ 
