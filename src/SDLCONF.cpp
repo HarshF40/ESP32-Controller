@@ -7,12 +7,15 @@
 #include <unistd.h>
 #include <thread>
 #include <mutex>
+#include <chrono>
+
+#define ESP32IP "127.0.0.1"
 
 std::mutex event_mutex;
 SDL_Event event;
 SDL_GameController *controller = nullptr;
-std::string left_trigger_axis = "0";
-std::string right_trigger_axis = "0";
+float left_trigger_axis = 0;
+float right_trigger_axis = 0;
 
 int initSDL(){
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){
@@ -38,10 +41,10 @@ void openDetJoy(){
 void get_left_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
-  std::string button = std::to_string(event.caxis.axis);
-  std::string value = std::to_string(event.caxis.value);
+  int button = (int)(event.caxis.axis);
+  int value = (int)(event.caxis.value) <= 0 ? 0 : (int)(event.caxis.value);
   lock.unlock();
-  if(button == "4") {
+  if(button == 4) {
     left_trigger_axis = value;
   }
   }
@@ -50,10 +53,10 @@ void get_left_trigger_val(){
 void get_right_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
-  std::string button = std::to_string(event.caxis.axis);
-  std::string value = std::to_string(event.caxis.value);
+  int button = std::abs((int)(event.caxis.axis));
+  int value = (int)(event.caxis.value) <= 0 ? 0 : (int)(event.caxis.value);
   lock.unlock();
-  if(button == "5") {
+  if(button == 5) {
     right_trigger_axis = value;
     }
   }
@@ -67,11 +70,12 @@ int input(){
   std::thread left(get_left_trigger_val);
 
   while(true){
-    sendData(sock, "127.0.0.1", 8080, "((4," + left_trigger_axis + "),(5," + right_trigger_axis + "))\n");
+        sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
       if(event.type == SDL_CONTROLLERAXISMOTION){ 
-        sendData(sock, "127.0.0.1", 8080, "((4," + left_trigger_axis + "),(5," + right_trigger_axis + "))\n");
+        sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
         std::cout<<"Controller Disconnected!"<<std::endl;
@@ -81,6 +85,7 @@ int input(){
         return 0;
       }
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
   right.join();
   left.join();
