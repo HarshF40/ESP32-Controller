@@ -9,14 +9,13 @@
 #include <mutex>
 #include <chrono>
 
-#define ESP32IP "127.0.0.1"
+#define ESP32IP "192.168.189.144"
 #define WRAPPER 256
-
 std::mutex event_mutex;
 SDL_Event event;
 SDL_GameController *controller = nullptr;
-float left_trigger_axis = 0;
-float right_trigger_axis = 0;
+int left_trigger_axis = 0;
+int right_trigger_axis = 0;
 
 int initSDL(){
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){
