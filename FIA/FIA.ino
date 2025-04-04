@@ -18,8 +18,12 @@ const int resolution = 8;
 int dutyCycle = 200;
 
 // Wi-Fi Credentials (Replace with your network's SSID and password)
-const char* ssid = "+";
-const char* password = "qwertyui00";
+//const char* ssid = "+";
+//const char* password = "qwertyui00";
+
+// Wi-Fi Credentials (Replace with your network's SSID and password)
+const char* ssid = "COMP_NEWDEPT";
+const char* password = "geccomp@123";
 
 // UDP Server Configuration
 WiFiUDP udp;
@@ -90,9 +94,9 @@ void loop() {
         }
         
     }
-    analogWrite(EN1, RT);   
-    analogWrite(EN3, RT);   
-    analogWrite(EN2, LT);   
+    //analogWrite(EN1, RT);   
+    analogWrite(EN2, RT);   
+    //analogWrite(EN3, LT);   
     analogWrite(EN4, LT);   
     delay(100);
 

@@ -9,7 +9,7 @@
 #include <mutex>
 #include <chrono>
 
-#define ESP32IP "192.168.189.144"
+#define ESP32IP "172.26.18.132"
 #define WRAPPER 256
 std::mutex event_mutex;
 SDL_Event event;
@@ -71,10 +71,12 @@ int input(){
 
   while(true){
     sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
       if(event.type == SDL_CONTROLLERAXISMOTION){ 
         sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
