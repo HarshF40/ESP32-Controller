@@ -42,10 +42,10 @@ void get_left_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
   int button = (int)(event.caxis.axis);
-  int value = (int)(event.caxis.value)%WRAPPER;
+  int value = ((int)(event.caxis.value)%WRAPPER)/3; 
   lock.unlock();
   if(button == 4) {
-    left_trigger_axis = value;
+    left_trigger_axis = value <= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2;
   }
   }
 }
@@ -54,10 +54,10 @@ void get_right_trigger_val(){
   while(true){
   std::unique_lock<std::mutex> lock(event_mutex);
   int button = std::abs((int)(event.caxis.axis));
-  int value = (((int)(event.caxis.value)+ 32768)/2)%WRAPPER;
+  int value = ((((int)(event.caxis.value)+ 32768)/2)%WRAPPER)/3;
   lock.unlock();
   if(button == 5) {
-    right_trigger_axis = value;
+    right_trigger_axis = value <= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2;
     }
   }
 }
