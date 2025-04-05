@@ -16,6 +16,7 @@ SDL_Event event;
 SDL_GameController *controller = nullptr;
 int left_trigger_axis = 0;
 int right_trigger_axis = 0;
+int dpad_val = 0;
 
 int initSDL(){
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){
@@ -62,27 +63,50 @@ void get_right_trigger_val(){
   }
 }
 
+void listen_dpadL(){
+  while(true){
+    std::unique_lock<std::mutex> lock(event_mutex);
+    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = -1;
+    lock.unlock();
+    dpad_val = 0;
+  }
+}
+
+void listen_dpadR(){
+  while(true){
+    std::unique_lock<std::mutex> lock(event_mutex);
+    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = 1;
+    lock.unlock();
+    dpad_val = 0;
+  }
+}
+
 int input(){
   bool running = true;
   int sock = crSocket();
 
   std::thread right(get_right_trigger_val);
   std::thread left(get_left_trigger_val);
+  std::thread dpadL(listen_dpadL);
+  std::thread dpadR(listen_dpadR);
 
   while(true){
-    sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+    sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
     std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
-      if(event.type == SDL_CONTROLLERAXISMOTION){ 
-        sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
-    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
+      if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT || event.type == SDL_CONTROLLER_BUTTON_DPAD_RIGHT){ 
+        //sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+        sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
+        std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
         std::cout<<"Controller Disconnected!"<<std::endl;
         right.join();
         left.join();
+        dpadL.join();
+        dpadR.join();
         close(sock);
         return 0;
       }
