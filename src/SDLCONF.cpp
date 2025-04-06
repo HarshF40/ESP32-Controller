@@ -95,8 +95,8 @@ int input(){
     std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
-      if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT || event.type == SDL_CONTROLLER_BUTTON_DPAD_RIGHT){ 
-        //sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+      if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLERBUTTONDOWN){ 
+        std::cout<<"Button: "<<static_cast<int>(event.cbutton.button)<<"\n";
         sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
         std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
