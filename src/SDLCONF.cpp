@@ -18,6 +18,9 @@ int left_trigger_axis = 0;
 int right_trigger_axis = 0;
 int dpad_val = 0;
 
+bool dpadRightHeld = false;
+bool dpadLeftHeld = false;
+
 int initSDL(){
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){
       std::cerr<<"SDL_Init failed: "<<SDL_GetError()<<std::endl;
@@ -64,7 +67,8 @@ void get_right_trigger_val(){
 }
 
 void listen_dpadL(){
-  while(true){
+  dpadLeftHeld = true;
+  while(dpadLeftHeld){
     std::unique_lock<std::mutex> lock(event_mutex);
     if(static_cast<int>(event.cbutton.button) == 13) dpad_val = -1;
     lock.unlock();
@@ -73,11 +77,21 @@ void listen_dpadL(){
 }
 
 void listen_dpadR(){
-  while(true){
+  dpadRightHeld = true;
+  while(dpadRightHeld){
     std::unique_lock<std::mutex> lock(event_mutex);
     if(static_cast<int>(event.cbutton.button) == 14) dpad_val = 1;
     lock.unlock();
     dpad_val = 0;
+  }
+}
+
+void listen_Bup(){
+  while(true){
+  if(event.type == SDL_CONTROLLERBUTTONDOWN){
+    if(event.cbutton.button == 13) dpadLeftHeld = false;
+    if(event.cbutton.button == 14) dpadRightHeld = false;
+  }
   }
 }
 
@@ -89,24 +103,29 @@ int input(){
   std::thread left(get_left_trigger_val);
   std::thread dpadL(listen_dpadL);
   std::thread dpadR(listen_dpadR);
+  std::thread listenbup(listen_Bup);
 
   while(true){
     sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
     std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
+
+///////////////////////////////////////////////////////////////////////
       if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLERBUTTONDOWN){ 
         std::cout<<"Button: "<<static_cast<int>(event.cbutton.button)<<"\n";
         sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
         std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
+///////////////////////////////////////////////////////////////////////
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
         std::cout<<"Controller Disconnected!"<<std::endl;
         right.join();
         left.join();
         dpadL.join();
         dpadR.join();
+        listenbup.join();
         close(sock);
         return 0;
       }
