@@ -46,7 +46,7 @@ void get_left_trigger_val(){
   int value = ((int)(event.caxis.value)%WRAPPER)/3; 
   lock.unlock();
   if(button == 4) {
-    left_trigger_axis = value <= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2;
+    left_trigger_axis = value /*<= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2*/;
   }
   }
 }
@@ -58,7 +58,7 @@ void get_right_trigger_val(){
   int value = ((((int)(event.caxis.value)+ 32768)/2)%WRAPPER)/3;
   lock.unlock();
   if(button == 5) {
-    right_trigger_axis = value <= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2;
+    right_trigger_axis = value /*<= 85 ? 0 : value > 85 && value <= 170 ? 1 : 2*/;
     }
   }
 }
@@ -98,7 +98,7 @@ int input(){
       if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT || event.type == SDL_CONTROLLER_BUTTON_DPAD_RIGHT){ 
         //sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
         sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
-        std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
+        std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
