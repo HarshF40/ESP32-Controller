@@ -66,7 +66,7 @@ void get_right_trigger_val(){
 void listen_dpadL(){
   while(true){
     std::unique_lock<std::mutex> lock(event_mutex);
-    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = -1;
+    if(static_cast<int>(event.cbutton.button) == 13) dpad_val = -1;
     lock.unlock();
     dpad_val = 0;
   }
@@ -75,7 +75,7 @@ void listen_dpadL(){
 void listen_dpadR(){
   while(true){
     std::unique_lock<std::mutex> lock(event_mutex);
-    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = 1;
+    if(static_cast<int>(event.cbutton.button) == 14) dpad_val = 1;
     lock.unlock();
     dpad_val = 0;
   }
