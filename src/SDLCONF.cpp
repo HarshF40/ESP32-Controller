@@ -9,7 +9,7 @@
 #include <mutex>
 #include <chrono>
 
-#define ESP32IP "172.26.18.132"
+#define ESP32IP "127.0.0.1"
 #define WRAPPER 256
 std::mutex event_mutex;
 SDL_Event event;
@@ -67,30 +67,31 @@ void get_right_trigger_val(){
 }
 
 void listen_dpadL(){
-  dpadLeftHeld = true;
-  while(dpadLeftHeld){
-    std::unique_lock<std::mutex> lock(event_mutex);
-    if(static_cast<int>(event.cbutton.button) == 13) dpad_val = -1;
-    lock.unlock();
-    dpad_val = 0;
+  while(true){
+    //std::unique_lock<std::mutex> lock(event_mutex);
+    if(dpadLeftHeld) dpad_val = -1;
+    //lock.unlock();
+    //dpad_val = 0;
   }
 }
 
 void listen_dpadR(){
-  dpadRightHeld = true;
-  while(dpadRightHeld){
-    std::unique_lock<std::mutex> lock(event_mutex);
-    if(static_cast<int>(event.cbutton.button) == 14) dpad_val = 1;
-    lock.unlock();
-    dpad_val = 0;
+  while(true){
+    //std::unique_lock<std::mutex> lock(event_mutex);
+    if(dpadRightHeld) dpad_val = 1;
+    //lock.unlock();
+    //dpad_val = 0;
   }
 }
 
 void listen_Bup(){
   while(true){
   if(event.type == SDL_CONTROLLERBUTTONDOWN){
-    if(event.cbutton.button == 13) dpadLeftHeld = false;
-    if(event.cbutton.button == 14) dpadRightHeld = false;
+    if(event.cbutton.button == 13) dpadLeftHeld = true;
+    if(event.cbutton.button == 14) dpadRightHeld = true;
+  } else if(event.type == SDL_CONTROLLERBUTTONUP){
+    if(event.cbutton.button == 13) dpadLeftHeld = false; dpad_val = 0;
+    if(event.cbutton.button == 14) dpadRightHeld = false; dpad_val = 0;
   }
   }
 }
@@ -107,7 +108,7 @@ int input(){
 
   while(true){
     sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
-    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
+    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
 
