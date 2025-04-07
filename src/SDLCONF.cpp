@@ -9,7 +9,7 @@
 #include <mutex>
 #include <chrono>
 
-#define ESP32IP "172.26.18.132"
+#define ESP32IP "127.0.0.1"
 #define WRAPPER 256
 std::mutex event_mutex;
 SDL_Event event;
@@ -17,6 +17,9 @@ SDL_GameController *controller = nullptr;
 int left_trigger_axis = 0;
 int right_trigger_axis = 0;
 int dpad_val = 0;
+
+bool dpadRightHeld = false;
+bool dpadLeftHeld = false;
 
 int initSDL(){
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){
@@ -65,19 +68,31 @@ void get_right_trigger_val(){
 
 void listen_dpadL(){
   while(true){
-    std::unique_lock<std::mutex> lock(event_mutex);
-    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = -1;
-    lock.unlock();
-    dpad_val = 0;
+    //std::unique_lock<std::mutex> lock(event_mutex);
+    if(dpadLeftHeld) dpad_val = -1;
+    //lock.unlock();
+    //dpad_val = 0;
   }
 }
 
 void listen_dpadR(){
   while(true){
-    std::unique_lock<std::mutex> lock(event_mutex);
-    if(event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT) dpad_val = 1;
-    lock.unlock();
-    dpad_val = 0;
+    //std::unique_lock<std::mutex> lock(event_mutex);
+    if(dpadRightHeld) dpad_val = 1;
+    //lock.unlock();
+    //dpad_val = 0;
+  }
+}
+
+void listen_Bup(){
+  while(true){
+  if(event.type == SDL_CONTROLLERBUTTONDOWN){
+    if(event.cbutton.button == 13) dpadLeftHeld = true;
+    if(event.cbutton.button == 14) dpadRightHeld = true;
+  } else if(event.type == SDL_CONTROLLERBUTTONUP){
+    if(event.cbutton.button == 13) dpadLeftHeld = false; dpad_val = 0;
+    if(event.cbutton.button == 14) dpadRightHeld = false; dpad_val = 0;
+  }
   }
 }
 
@@ -89,24 +104,29 @@ int input(){
   std::thread left(get_left_trigger_val);
   std::thread dpadL(listen_dpadL);
   std::thread dpadR(listen_dpadR);
+  std::thread listenbup(listen_Bup);
 
   while(true){
     sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
-    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<"\n";
+    std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
     while(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT) return 0;
-      if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLER_BUTTON_DPAD_LEFT || event.type == SDL_CONTROLLER_BUTTON_DPAD_RIGHT){ 
-        //sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + ")\n");
+
+///////////////////////////////////////////////////////////////////////
+      if(event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_CONTROLLERBUTTONDOWN){ 
+        std::cout<<"Button: "<<static_cast<int>(event.cbutton.button)<<"\n";
         sendData(sock, ESP32IP, 8080, "(" + std::to_string(left_trigger_axis) + "," + std::to_string(right_trigger_axis) + "," + "dpad: " + std::to_string(dpad_val) + ")\n");
         std::cout<<left_trigger_axis<<" "<<right_trigger_axis<<" "<<dpad_val<<"\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
+///////////////////////////////////////////////////////////////////////
       if(event.type == SDL_CONTROLLERDEVICEREMOVED){
         std::cout<<"Controller Disconnected!"<<std::endl;
         right.join();
         left.join();
         dpadL.join();
         dpadR.join();
+        listenbup.join();
         close(sock);
         return 0;
       }

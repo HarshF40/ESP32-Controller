@@ -24,6 +24,6 @@ void sendData(int sock, const char* serverIP, int serverPort, std::string data="
 
   int sentBytes = sendto(sock, data.c_str(), data.size(), 0, (sockaddr*)&server, sizeof(server));
   if(sentBytes < 0) std::cerr<<"\rFailed to send data!"<<std::endl;
-  else std::cout<<"\rData Sent Successfully!"<<std::flush;
+  //else std::cout<<"\rData Sent Successfully!"<<std::flush;
 }
 

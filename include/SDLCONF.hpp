@@ -15,3 +15,4 @@ void get_right_trigger_val();
 void get_left_trigger_val();
 void listen_dpadL();
 void listen_dpadR();
+void listen_Bup();
